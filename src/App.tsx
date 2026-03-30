@@ -363,25 +363,37 @@ export default function App() {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
-                { name: 'Off', icon: Power, args: 'off' },
-                { name: 'Feedback', icon: Waves, args: 'feedback 0 5' },
-                { name: 'Weapon', icon: Gamepad2, args: 'weapon 2 5 8' },
-                { name: 'Bow', icon: Sliders, args: 'bow 1 6 4 2' },
-                { name: 'Galloping', icon: Activity, args: 'galloping 0 8 2 4 10' },
-                { name: 'Vibration', icon: Waves, args: 'vibration 5 4 10' }
+                { name: 'Off', icon: Power, args: 'off', category: 'Basic' },
+                { name: 'Feedback', icon: Waves, args: 'feedback 0 5', category: 'Basic' },
+                { name: 'Weapon', icon: Gamepad2, args: 'weapon 2 5 8', category: 'Basic' },
+                { name: 'Bow', icon: Sliders, args: 'bow 1 6 4 2', category: 'Basic' },
+                { name: 'Galloping', icon: Activity, args: 'galloping 0 8 2 4 10', category: 'Basic' },
+                { name: 'Vibration', icon: Waves, args: 'vibration 5 4 10', category: 'Basic' },
+                
+                // Star Citizen Specific
+                { name: 'Afterburner', icon: Zap, args: 'feedback 7 8', category: 'Star Citizen' },
+                { name: 'Mining Laser', icon: Activity, args: 'vibration 0 3 15', category: 'Star Citizen' },
+                { name: 'Ship Cannons', icon: Gamepad2, args: 'machine 1 9 4 8 5 2', category: 'Star Citizen' },
+                { name: 'Quantum Drive', icon: Waves, args: 'vibration 5 8 20', category: 'Star Citizen' },
+                { name: 'EVA Thrusters', icon: Zap, args: 'feedback 2 2', category: 'Star Citizen' }
               ].map((t) => (
                 <button 
                   key={t.name}
                   onClick={() => runCmd('trigger', `both ${t.args}`)}
-                  className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all group text-left"
+                  className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all group text-left relative overflow-hidden"
                 >
                   <div className="p-2 bg-white/5 group-hover:bg-blue-500/20 rounded-lg transition-colors">
                     <t.icon className="w-5 h-5 text-white/60 group-hover:text-blue-400" />
                   </div>
                   <div>
                     <div className="text-sm font-bold">{t.name}</div>
-                    <div className="text-[10px] text-white/30 uppercase tracking-tighter">Apply to both</div>
+                    <div className="text-[10px] text-white/30 uppercase tracking-tighter">{t.category}</div>
                   </div>
+                  {t.category === 'Star Citizen' && (
+                    <div className="absolute top-0 right-0 p-1">
+                      <div className="w-1 h-1 bg-blue-500 rounded-full animate-pulse" />
+                    </div>
+                  )}
                 </button>
               ))}
             </div>

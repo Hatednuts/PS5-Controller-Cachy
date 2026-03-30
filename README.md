@@ -62,6 +62,38 @@ npm run install-desktop
 ```
 After running this, you can launch "DualSense GUI" directly from your desktop launcher.
 
+## Updating
+
+To update the application to the latest version:
+
+1.  **Pull the latest changes**:
+    ```bash
+    git pull origin main
+    ```
+2.  **Re-install dependencies** (if any changed):
+    ```bash
+    npm install
+    ```
+3.  **Re-build the application**:
+    ```bash
+    npm run build
+    ```
+4.  **Re-install the desktop entry** (to ensure paths are correct):
+    ```bash
+    npm run install-desktop
+    ```
+
+## Reloading System Apps
+
+If the app doesn't appear in your menu immediately after installation or update, you can force a refresh of the desktop database:
+
+- **GNOME**: Press `Alt+F2`, type `r`, and press `Enter` (X11 only) or just wait a few seconds.
+- **KDE Plasma**: It should update automatically, but you can run `kbuildsycoca5 --noincremental`.
+- **General (XDG)**:
+  ```bash
+  update-desktop-database ~/.local/share/applications
+  ```
+
 ## Uninstallation
 
 ### Remove System App
