@@ -25,7 +25,11 @@ async function startServer() {
       // Mocking for development environment
       if (process.env.NODE_ENV !== "production") {
         if (args === "-l") {
-          return { success: true, stdout: "Devices:\n  /dev/hidraw0: DualSense Wireless Controller (Mock)\n", stderr: "" };
+          return { 
+            success: true, 
+            stdout: "Devices:\n  /dev/hidraw0: DualSense Wireless Controller (Mock)\n  90:b6:85:9c:92:60 (Bluetooth Mock)\n", 
+            stderr: "" 
+          };
         }
         if (args.includes("battery")) {
           return { success: true, stdout: "80%\n", stderr: "" };

@@ -65,10 +65,25 @@ export default function App() {
         const lines = data.stdout.trim().split('\n');
         const parsedDevices = lines
           .filter(line => line.trim() && !line.trim().startsWith('Devices'))
-          .map((line: string, index: number) => ({
-            id: line.includes(':') ? line.split(':')[0].trim() : line.trim(),
-            name: line.includes(':') ? line.split(':')[1].trim() : `Controller ${index + 1}`
-          }));
+          .map((line: string, index: number) => {
+            const trimmed = line.trim();
+            let id: string;
+            let name: string;
+
+            if (trimmed.includes(': ')) {
+              // Format: "/dev/hidraw0: DualSense Wireless Controller"
+              const parts = trimmed.split(': ');
+              id = parts[0].trim();
+              name = parts.slice(1).join(': ').trim();
+            } else {
+              // Format: "90:b6:85:9c:92:60 (Bluetooth)" or just "ID"
+              const parts = trimmed.split(/\s+/);
+              id = parts[0].trim();
+              name = parts.slice(1).join(' ').trim() || id;
+            }
+
+            return { id, name };
+          });
         setDevices(parsedDevices);
         if (parsedDevices.length > 0 && !selectedDevice) {
           setSelectedDevice(parsedDevices[0].id);
