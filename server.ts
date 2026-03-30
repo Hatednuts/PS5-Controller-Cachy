@@ -22,7 +22,7 @@ async function startServer() {
     } catch (error: any) {
       console.error(`Error executing dualsensectl ${args}:`, error.message);
       
-      // Mocking for the AI Studio preview environment
+      // Mocking for development environment
       if (process.env.NODE_ENV !== "production") {
         if (args === "-l") {
           return { success: true, stdout: "Device 1: DualSense Wireless Controller (Mock)\n", stderr: "" };
