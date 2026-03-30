@@ -46,6 +46,15 @@ export default function App() {
   // Lightbar state
   const [lightbarOn, setLightbarOn] = useState(true);
   const [lightbarColor, setLightbarColor] = useState({ r: 0, g: 0, b: 255, brightness: 255 });
+  const [liveUpdate, setLiveUpdate] = useState(false);
+
+  // Battery Color Mode
+  const [batteryColorMode, setBatteryColorMode] = useState(false);
+  const [batteryThresholds, setBatteryThresholds] = useState([
+    { min: 0, max: 15, r: 255, g: 0, b: 0, label: 'Critical' },
+    { min: 16, max: 40, r: 255, g: 165, b: 0, label: 'Low' },
+    { min: 41, max: 100, r: 0, g: 255, b: 0, label: 'Healthy' }
+  ]);
 
   // Audio state
   const [volume, setVolume] = useState(128);
@@ -55,6 +64,39 @@ export default function App() {
   useEffect(() => {
     fetchDevices();
   }, []);
+
+  // Battery Color Mode Loop
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (batteryColorMode && selectedDevice) {
+      const updateBatteryColor = async () => {
+        const res = await runCmd('battery');
+        if (res) {
+          const level = parseInt(res.replace('%', '').trim());
+          if (!isNaN(level)) {
+            setBattery(res.trim());
+            const match = batteryThresholds.find(t => level >= t.min && level <= t.max);
+            if (match) {
+              await runCmd('lightbar', `${match.r} ${match.g} ${match.b} 255`);
+            }
+          }
+        }
+      };
+      updateBatteryColor();
+      interval = setInterval(updateBatteryColor, 30000); // Every 30s
+    }
+    return () => clearInterval(interval);
+  }, [batteryColorMode, selectedDevice, batteryThresholds]);
+
+  // Live Lightbar Update
+  useEffect(() => {
+    if (liveUpdate && lightbarOn) {
+      const timeout = setTimeout(() => {
+        updateLightbarColor();
+      }, 100);
+      return () => clearTimeout(timeout);
+    }
+  }, [lightbarColor, liveUpdate, lightbarOn]);
 
   const fetchDevices = async () => {
     setLoading(true);
@@ -142,6 +184,9 @@ export default function App() {
   };
 
   const updateLightbarColor = async () => {
+    // Force lightbar ON before setting color to ensure it applies
+    // This addresses the issue where color only changes on specific events
+    await runCmd('lightbar', 'on');
     await runCmd('lightbar', `${lightbarColor.r} ${lightbarColor.g} ${lightbarColor.b} ${lightbarColor.brightness}`);
   };
 
@@ -306,6 +351,15 @@ export default function App() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
               <div className="space-y-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-white/30 uppercase">Live Sync</span>
+                  <button 
+                    onClick={() => setLiveUpdate(!liveUpdate)}
+                    className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${liveUpdate ? 'bg-blue-500 text-white' : 'bg-white/5 text-white/40'}`}
+                  >
+                    {liveUpdate ? 'ON' : 'OFF'}
+                  </button>
+                </div>
                 {['r', 'g', 'b'].map((color) => (
                   <div key={color} className="space-y-2">
                     <div className="flex justify-between text-xs uppercase font-bold tracking-tighter">
@@ -346,12 +400,46 @@ export default function App() {
                   />
                 </div>
 
+                {!liveUpdate && (
+                  <button 
+                    onClick={updateLightbarColor}
+                    className="w-full py-3 bg-white text-black font-bold rounded-xl hover:bg-white/90 transition-all active:scale-95"
+                  >
+                    Apply Color
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Battery Color Mode Section */}
+            <div className="mt-10 pt-8 border-t border-white/5">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-sm font-bold text-white/80">Battery Color Mode</h3>
+                  <p className="text-[10px] text-white/30 uppercase tracking-tight">Automatically change color based on battery level</p>
+                </div>
                 <button 
-                  onClick={updateLightbarColor}
-                  className="w-full py-3 bg-white text-black font-bold rounded-xl hover:bg-white/90 transition-all active:scale-95"
+                  onClick={() => setBatteryColorMode(!batteryColorMode)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                    batteryColorMode ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-white/5 text-white/40 border border-white/10'
+                  }`}
                 >
-                  Apply Color
+                  {batteryColorMode ? 'Active' : 'Disabled'}
                 </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {batteryThresholds.map((t, i) => (
+                  <div key={i} className="p-4 bg-white/5 rounded-xl border border-white/5">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[10px] font-bold uppercase text-white/40">{t.label}</span>
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: `rgb(${t.r}, ${t.g}, ${t.b})` }} />
+                    </div>
+                    <div className="text-xs font-mono text-white/60">
+                      {t.min}% - {t.max}%
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </section>
