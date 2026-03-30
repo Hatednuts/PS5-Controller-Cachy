@@ -63,10 +63,12 @@ export default function App() {
       const data = await res.json();
       if (data.success && data.stdout) {
         const lines = data.stdout.trim().split('\n');
-        const parsedDevices = lines.map((line: string, index: number) => ({
-          id: line.includes(':') ? line.split(':')[0].trim() : line.trim(),
-          name: line.includes(':') ? line.split(':')[1].trim() : `Controller ${index + 1}`
-        }));
+        const parsedDevices = lines
+          .filter(line => line.trim() && !line.trim().startsWith('Devices'))
+          .map((line: string, index: number) => ({
+            id: line.includes(':') ? line.split(':')[0].trim() : line.trim(),
+            name: line.includes(':') ? line.split(':')[1].trim() : `Controller ${index + 1}`
+          }));
         setDevices(parsedDevices);
         if (parsedDevices.length > 0 && !selectedDevice) {
           setSelectedDevice(parsedDevices[0].id);
@@ -80,6 +82,10 @@ export default function App() {
   };
 
   const runCmd = async (command: string, args: string = '') => {
+    if (!selectedDevice) {
+      showStatus("No device selected", 'error');
+      return null;
+    }
     try {
       const res = await fetch('/api/command', {
         method: 'POST',
