@@ -10,7 +10,8 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "start": "node server.ts",
-    "install-desktop": "chmod +x scripts/launch.sh && mkdir -p ~/.local/share/applications && cp dualsense-gui.desktop ~/.local/share/applications/ && sed -i \"s|Exec=.*|Exec=$(pwd)/scripts/launch.sh|\" ~/.local/share/applications/dualsense-gui.desktop"
+    "install-desktop": "chmod +x scripts/launch.sh && mkdir -p ~/.local/share/applications && cp dualsense-gui.desktop ~/.local/share/applications/ && sed -i \"s|Exec=.*|Exec=$(pwd)/scripts/launch.sh|\" ~/.local/share/applications/dualsense-gui.desktop",
+    "uninstall-desktop": "rm -f ~/.local/share/applications/dualsense-gui.desktop"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

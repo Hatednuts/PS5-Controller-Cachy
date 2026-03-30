@@ -53,7 +53,7 @@ To start the server and open the GUI in your browser:
 ```bash
 npm run start
 ```
-The app will be accessible at `http://localhost:3000`.
+The app will be accessible at `http://localhost:36364`.
 
 ### Install as a System App
 To make DualSense GUI appear in your system's application menu (GNOME, KDE, etc.):
@@ -61,6 +61,29 @@ To make DualSense GUI appear in your system's application menu (GNOME, KDE, etc.
 npm run install-desktop
 ```
 After running this, you can launch "DualSense GUI" directly from your desktop launcher.
+
+## Uninstallation
+
+### Remove System App
+To remove the application from your system menu:
+```bash
+npm run uninstall-desktop
+```
+
+### Clean Build Files
+To remove the compiled frontend assets:
+```bash
+npm run clean
+```
+
+### Complete Removal
+To completely remove the project:
+1. Run the uninstallation script above.
+2. Delete the project folder:
+```bash
+cd ..
+rm -rf PS5-Controller-Cachy
+```
 
 ## Troubleshooting
 

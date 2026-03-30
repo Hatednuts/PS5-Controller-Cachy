@@ -14,7 +14,7 @@ sleep 2
 
 # Open the app in the default browser
 # On Wayland/CachyOS, 'xdg-open' is the standard way
-xdg-open "http://localhost:3000"
+xdg-open "http://localhost:36364"
 
 # Keep the script running to keep the server alive
 # When the terminal/process is closed, kill the server
