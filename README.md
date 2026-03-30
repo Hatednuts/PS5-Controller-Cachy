@@ -10,6 +10,9 @@ A modern, full-stack graphical user interface for `dualsensectl`, designed speci
 - **Lightbar Customization**: Full RGB color picker with real-time brightness control.
 - **Audio Management**: Adjust speaker/headphone volume and toggle the built-in microphone.
 - **Adaptive Triggers**: Apply advanced trigger effects like Weapon, Bow, Galloping, and Vibration presets.
+- **Star Citizen Dashboard**: Dedicated presets for Flight, Combat, Mining, Quantum Drive, and more.
+- **Persistent Mode**: Automatically re-applies settings every 5 seconds to prevent games (like Star Citizen) from resetting your lightbar.
+- **Battery Color Mode**: Automatically changes the lightbar color based on battery percentage (Green/Orange/Red).
 - **Battery Monitoring**: View real-time battery percentage.
 - **System Integration**: One-click installation to your system's application menu.
 

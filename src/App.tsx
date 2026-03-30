@@ -19,7 +19,12 @@ import {
   Palette,
   Sliders,
   Waves,
-  Activity
+  Activity,
+  Crosshair,
+  Drill,
+  FastForward,
+  Target,
+  Plane
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -47,6 +52,8 @@ export default function App() {
   const [lightbarOn, setLightbarOn] = useState(true);
   const [lightbarColor, setLightbarColor] = useState({ r: 0, g: 0, b: 255, brightness: 255 });
   const [liveUpdate, setLiveUpdate] = useState(false);
+  const [persistentMode, setPersistentMode] = useState(false);
+  const [activeTab, setActiveTab] = useState<'general' | 'starcitizen'>('general');
 
   // Battery Color Mode
   const [batteryColorMode, setBatteryColorMode] = useState(false);
@@ -97,6 +104,18 @@ export default function App() {
       return () => clearTimeout(timeout);
     }
   }, [lightbarColor, liveUpdate, lightbarOn]);
+
+  // Persistent Mode Loop (Force re-apply settings)
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (persistentMode && selectedDevice) {
+      const reapply = () => {
+        if (lightbarOn && !batteryColorMode) updateLightbarColor();
+      };
+      interval = setInterval(reapply, 5000); // Re-apply every 5s
+    }
+    return () => clearInterval(interval);
+  }, [persistentMode, selectedDevice, lightbarOn, batteryColorMode, lightbarColor]);
 
   const fetchDevices = async () => {
     setLoading(true);
@@ -237,8 +256,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-12 gap-6">
-        
+      <main className="max-w-6xl mx-auto p-6">
         {/* Status Bar */}
         <AnimatePresence>
           {statusMsg && (
@@ -254,6 +272,24 @@ export default function App() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Navigation Tabs */}
+        <div className="flex gap-2 mb-8 bg-white/5 p-1 rounded-2xl w-fit border border-white/5">
+          <button 
+            onClick={() => setActiveTab('general')}
+            className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'general' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-white/40 hover:text-white/60'}`}
+          >
+            General Settings
+          </button>
+          <button 
+            onClick={() => setActiveTab('starcitizen')}
+            className={`px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'starcitizen' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-white/40 hover:text-white/60'}`}
+          >
+            <Zap className="w-3 h-3" /> Star Citizen
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
 
         {/* Left Column: Quick Stats & Power */}
         <div className="md:col-span-4 space-y-6">
@@ -334,160 +370,235 @@ export default function App() {
 
         {/* Right Column: Lightbar & Triggers */}
         <div className="md:col-span-8 space-y-6">
-          <section className="bg-[#161920] border border-white/5 rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-white/40 flex items-center gap-2">
-                <Palette className="w-3 h-3" /> Lightbar
-              </h2>
-              <button 
-                onClick={toggleLightbar}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  lightbarOn ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-white/5 text-white/40 border border-white/10'
-                }`}
-              >
-                <Lightbulb className="w-3 h-3" /> {lightbarOn ? 'Enabled' : 'Disabled'}
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-white/30 uppercase">Live Sync</span>
+          {activeTab === 'general' ? (
+            <>
+              <section className="bg-[#161920] border border-white/5 rounded-2xl p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-xs font-semibold uppercase tracking-widest text-white/40 flex items-center gap-2">
+                    <Palette className="w-3 h-3" /> Lightbar
+                  </h2>
                   <button 
-                    onClick={() => setLiveUpdate(!liveUpdate)}
-                    className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${liveUpdate ? 'bg-blue-500 text-white' : 'bg-white/5 text-white/40'}`}
+                    onClick={toggleLightbar}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      lightbarOn ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-white/5 text-white/40 border border-white/10'
+                    }`}
                   >
-                    {liveUpdate ? 'ON' : 'OFF'}
+                    <Lightbulb className="w-3 h-3" /> {lightbarOn ? 'Enabled' : 'Disabled'}
                   </button>
                 </div>
-                {['r', 'g', 'b'].map((color) => (
-                  <div key={color} className="space-y-2">
-                    <div className="flex justify-between text-xs uppercase font-bold tracking-tighter">
-                      <span className="text-white/40">{color === 'r' ? 'Red' : color === 'g' ? 'Green' : 'Blue'}</span>
-                      <span className="text-white/60">{(lightbarColor as any)[color]}</span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold text-white/30 uppercase">Live Sync</span>
+                        <button 
+                          onClick={() => setLiveUpdate(!liveUpdate)}
+                          className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${liveUpdate ? 'bg-blue-500 text-white' : 'bg-white/5 text-white/40'}`}
+                        >
+                          {liveUpdate ? 'ON' : 'OFF'}
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-white/30 uppercase">Persistent Mode</span>
+                          <span className="text-[8px] text-white/20 uppercase">Prevents game resets</span>
+                        </div>
+                        <button 
+                          onClick={() => setPersistentMode(!persistentMode)}
+                          className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${persistentMode ? 'bg-orange-500 text-white' : 'bg-white/5 text-white/40'}`}
+                        >
+                          {persistentMode ? 'ACTIVE' : 'OFF'}
+                        </button>
+                      </div>
                     </div>
-                    <input 
-                      type="range" min="0" max="255" 
-                      value={(lightbarColor as any)[color]} 
-                      onChange={(e) => setLightbarColor({...lightbarColor, [color]: parseInt(e.target.value)})}
-                      className={`w-full h-1.5 rounded-full appearance-none cursor-pointer bg-white/5 ${
-                        color === 'r' ? 'accent-red-500' : color === 'g' ? 'accent-green-500' : 'accent-blue-500'
-                      }`}
+                    {['r', 'g', 'b'].map((color) => (
+                      <div key={color} className="space-y-2">
+                        <div className="flex justify-between text-xs uppercase font-bold tracking-tighter">
+                          <span className="text-white/40">{color === 'r' ? 'Red' : color === 'g' ? 'Green' : 'Blue'}</span>
+                          <span className="text-white/60">{(lightbarColor as any)[color]}</span>
+                        </div>
+                        <input 
+                          type="range" min="0" max="255" 
+                          value={(lightbarColor as any)[color]} 
+                          onChange={(e) => setLightbarColor({...lightbarColor, [color]: parseInt(e.target.value)})}
+                          className={`w-full h-1.5 rounded-full appearance-none cursor-pointer bg-white/5 ${
+                            color === 'r' ? 'accent-red-500' : color === 'g' ? 'accent-green-500' : 'accent-blue-500'
+                          }`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center space-y-6">
+                    <div 
+                      className="w-32 h-32 rounded-full border-4 border-white/10 shadow-2xl transition-all duration-500"
+                      style={{ 
+                        backgroundColor: `rgb(${lightbarColor.r}, ${lightbarColor.g}, ${lightbarColor.b})`,
+                        boxShadow: lightbarOn ? `0 0 40px rgba(${lightbarColor.r}, ${lightbarColor.g}, ${lightbarColor.b}, 0.4)` : 'none',
+                        opacity: lightbarOn ? (lightbarColor.brightness / 255) : 0.1
+                      }}
                     />
-                  </div>
-                ))}
-              </div>
+                    
+                    <div className="w-full space-y-2">
+                      <div className="flex justify-between text-xs uppercase font-bold tracking-tighter">
+                        <span className="text-white/40">Brightness</span>
+                        <span className="text-white/60">{lightbarColor.brightness}</span>
+                      </div>
+                      <input 
+                        type="range" min="0" max="255" value={lightbarColor.brightness} 
+                        onChange={(e) => setLightbarColor({...lightbarColor, brightness: parseInt(e.target.value)})}
+                        className="w-full accent-white bg-white/10 h-1.5 rounded-full appearance-none cursor-pointer"
+                      />
+                    </div>
 
-              <div className="flex flex-col items-center justify-center space-y-6">
-                <div 
-                  className="w-32 h-32 rounded-full border-4 border-white/10 shadow-2xl transition-all duration-500"
-                  style={{ 
-                    backgroundColor: `rgb(${lightbarColor.r}, ${lightbarColor.g}, ${lightbarColor.b})`,
-                    boxShadow: lightbarOn ? `0 0 40px rgba(${lightbarColor.r}, ${lightbarColor.g}, ${lightbarColor.b}, 0.4)` : 'none',
-                    opacity: lightbarOn ? (lightbarColor.brightness / 255) : 0.1
-                  }}
-                />
-                
-                <div className="w-full space-y-2">
-                  <div className="flex justify-between text-xs uppercase font-bold tracking-tighter">
-                    <span className="text-white/40">Brightness</span>
-                    <span className="text-white/60">{lightbarColor.brightness}</span>
+                    {!liveUpdate && (
+                      <button 
+                        onClick={updateLightbarColor}
+                        className="w-full py-3 bg-white text-black font-bold rounded-xl hover:bg-white/90 transition-all active:scale-95"
+                      >
+                        Apply Color
+                      </button>
+                    )}
                   </div>
-                  <input 
-                    type="range" min="0" max="255" value={lightbarColor.brightness} 
-                    onChange={(e) => setLightbarColor({...lightbarColor, brightness: parseInt(e.target.value)})}
-                    className="w-full accent-white bg-white/10 h-1.5 rounded-full appearance-none cursor-pointer"
-                  />
                 </div>
 
-                {!liveUpdate && (
+                {/* Battery Color Mode Section */}
+                <div className="mt-10 pt-8 border-t border-white/5">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h3 className="text-sm font-bold text-white/80">Battery Color Mode</h3>
+                      <p className="text-[10px] text-white/30 uppercase tracking-tight">Automatically change color based on battery level</p>
+                    </div>
+                    <button 
+                      onClick={() => setBatteryColorMode(!batteryColorMode)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                        batteryColorMode ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-white/5 text-white/40 border border-white/10'
+                      }`}
+                    >
+                      {batteryColorMode ? 'Active' : 'Disabled'}
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {batteryThresholds.map((t, i) => (
+                      <div key={i} className="p-4 bg-white/5 rounded-xl border border-white/5">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-[10px] font-bold uppercase text-white/40">{t.label}</span>
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: `rgb(${t.r}, ${t.g}, ${t.b})` }} />
+                        </div>
+                        <div className="text-xs font-mono text-white/60">
+                          {t.min}% - {t.max}%
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              <section className="bg-[#161920] border border-white/5 rounded-2xl p-6 shadow-sm">
+                <h2 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-8 flex items-center gap-2">
+                  <Zap className="w-3 h-3" /> Adaptive Triggers
+                </h2>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    { name: 'Off', icon: Power, args: 'off', category: 'Basic' },
+                    { name: 'Feedback', icon: Waves, args: 'feedback 0 5', category: 'Basic' },
+                    { name: 'Weapon', icon: Gamepad2, args: 'weapon 2 5 8', category: 'Basic' },
+                    { name: 'Bow', icon: Sliders, args: 'bow 1 6 4 2', category: 'Basic' },
+                    { name: 'Galloping', icon: Activity, args: 'galloping 0 8 2 4 10', category: 'Basic' },
+                    { name: 'Vibration', icon: Waves, args: 'vibration 5 4 10', category: 'Basic' },
+                    
+                    // Star Citizen Specific
+                    { name: 'Afterburner', icon: Zap, args: 'feedback 7 8', category: 'Star Citizen' },
+                    { name: 'Mining Laser', icon: Activity, args: 'vibration 0 3 15', category: 'Star Citizen' },
+                    { name: 'Ship Cannons', icon: Gamepad2, args: 'machine 1 9 4 8 5 2', category: 'Star Citizen' },
+                    { name: 'Quantum Drive', icon: Waves, args: 'vibration 5 8 20', category: 'Star Citizen' },
+                    { name: 'EVA Thrusters', icon: Zap, args: 'feedback 2 2', category: 'Star Citizen' }
+                  ].map((t) => (
+                    <button 
+                      key={t.name}
+                      onClick={() => runCmd('trigger', `both ${t.args}`)}
+                      className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all group text-left relative overflow-hidden"
+                    >
+                      <div className="p-2 bg-white/5 group-hover:bg-blue-500/20 rounded-lg transition-colors">
+                        <t.icon className="w-5 h-5 text-white/60 group-hover:text-blue-400" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold">{t.name}</div>
+                        <div className="text-[10px] text-white/30 uppercase tracking-tighter">{t.category}</div>
+                      </div>
+                      {t.category === 'Star Citizen' && (
+                        <div className="absolute top-0 right-0 p-1">
+                          <div className="w-1 h-1 bg-blue-500 rounded-full animate-pulse" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            </>
+          ) : (
+            <section className="bg-[#161920] border border-white/5 rounded-2xl p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-xs font-semibold uppercase tracking-widest text-white/40 flex items-center gap-2">
+                  <Zap className="w-3 h-3" /> Star Citizen Dashboard
+                </h2>
+                <div className="px-3 py-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-lg border border-blue-500/20 uppercase tracking-widest">
+                  Immersive Presets
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {[
+                  { name: 'Flight Mode', icon: Plane, color: { r: 0, g: 150, b: 255 }, trigger: 'off', desc: 'Standard flight configuration' },
+                  { name: 'Combat Mode', icon: Crosshair, color: { r: 255, g: 0, b: 0 }, trigger: 'weapon 2 5 8', desc: 'High recoil weapon feedback' },
+                  { name: 'Mining Mode', icon: Drill, color: { r: 255, g: 100, b: 0 }, trigger: 'vibration 0 3 15', desc: 'Laser stability feedback' },
+                  { name: 'Quantum Drive', icon: Zap, color: { r: 0, g: 255, b: 255 }, trigger: 'vibration 5 8 20', desc: 'Heavy spooling vibration' },
+                  { name: 'Afterburner', icon: FastForward, color: { r: 255, g: 255, b: 255 }, trigger: 'feedback 7 8', desc: 'Boost stage resistance' },
+                  { name: 'EVA / Docking', icon: Target, color: { r: 150, g: 255, b: 0 }, trigger: 'feedback 2 2', desc: 'Precise maneuvering feel' }
+                ].map((p) => (
                   <button 
-                    onClick={updateLightbarColor}
-                    className="w-full py-3 bg-white text-black font-bold rounded-xl hover:bg-white/90 transition-all active:scale-95"
+                    key={p.name}
+                    onClick={async () => {
+                      setLightbarColor({ ...lightbarColor, ...p.color });
+                      await runCmd('lightbar', `${p.color.r} ${p.color.g} ${p.color.b} 255`);
+                      await runCmd('trigger', `both ${p.trigger}`);
+                      showStatus(`${p.name} Activated`, 'success');
+                    }}
+                    className="flex flex-col gap-4 p-6 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group text-left relative overflow-hidden"
                   >
-                    Apply Color
+                    <div className="flex items-center justify-between">
+                      <div className="p-3 bg-white/5 group-hover:bg-blue-500/20 rounded-xl transition-colors">
+                        <p.icon className="w-6 h-6 text-white/60 group-hover:text-blue-400" />
+                      </div>
+                      <div className="w-4 h-4 rounded-full border-2 border-white/10" style={{ backgroundColor: `rgb(${p.color.r}, ${p.color.g}, ${p.color.b})` }} />
+                    </div>
+                    <div>
+                      <div className="text-base font-bold text-white/90">{p.name}</div>
+                      <div className="text-xs text-white/30 mt-1">{p.desc}</div>
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 opacity-5 group-hover:opacity-10 transition-opacity">
+                      <p.icon className="w-24 h-24 text-white" />
+                    </div>
                   </button>
-                )}
-              </div>
-            </div>
-
-            {/* Battery Color Mode Section */}
-            <div className="mt-10 pt-8 border-t border-white/5">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-sm font-bold text-white/80">Battery Color Mode</h3>
-                  <p className="text-[10px] text-white/30 uppercase tracking-tight">Automatically change color based on battery level</p>
-                </div>
-                <button 
-                  onClick={() => setBatteryColorMode(!batteryColorMode)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                    batteryColorMode ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-white/5 text-white/40 border border-white/10'
-                  }`}
-                >
-                  {batteryColorMode ? 'Active' : 'Disabled'}
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {batteryThresholds.map((t, i) => (
-                  <div key={i} className="p-4 bg-white/5 rounded-xl border border-white/5">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] font-bold uppercase text-white/40">{t.label}</span>
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: `rgb(${t.r}, ${t.g}, ${t.b})` }} />
-                    </div>
-                    <div className="text-xs font-mono text-white/60">
-                      {t.min}% - {t.max}%
-                    </div>
-                  </div>
                 ))}
               </div>
-            </div>
-          </section>
 
-          <section className="bg-[#161920] border border-white/5 rounded-2xl p-6 shadow-sm">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-8 flex items-center gap-2">
-              <Zap className="w-3 h-3" /> Adaptive Triggers
-            </h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { name: 'Off', icon: Power, args: 'off', category: 'Basic' },
-                { name: 'Feedback', icon: Waves, args: 'feedback 0 5', category: 'Basic' },
-                { name: 'Weapon', icon: Gamepad2, args: 'weapon 2 5 8', category: 'Basic' },
-                { name: 'Bow', icon: Sliders, args: 'bow 1 6 4 2', category: 'Basic' },
-                { name: 'Galloping', icon: Activity, args: 'galloping 0 8 2 4 10', category: 'Basic' },
-                { name: 'Vibration', icon: Waves, args: 'vibration 5 4 10', category: 'Basic' },
-                
-                // Star Citizen Specific
-                { name: 'Afterburner', icon: Zap, args: 'feedback 7 8', category: 'Star Citizen' },
-                { name: 'Mining Laser', icon: Activity, args: 'vibration 0 3 15', category: 'Star Citizen' },
-                { name: 'Ship Cannons', icon: Gamepad2, args: 'machine 1 9 4 8 5 2', category: 'Star Citizen' },
-                { name: 'Quantum Drive', icon: Waves, args: 'vibration 5 8 20', category: 'Star Citizen' },
-                { name: 'EVA Thrusters', icon: Zap, args: 'feedback 2 2', category: 'Star Citizen' }
-              ].map((t) => (
-                <button 
-                  key={t.name}
-                  onClick={() => runCmd('trigger', `both ${t.args}`)}
-                  className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all group text-left relative overflow-hidden"
-                >
-                  <div className="p-2 bg-white/5 group-hover:bg-blue-500/20 rounded-lg transition-colors">
-                    <t.icon className="w-5 h-5 text-white/60 group-hover:text-blue-400" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold">{t.name}</div>
-                    <div className="text-[10px] text-white/30 uppercase tracking-tighter">{t.category}</div>
-                  </div>
-                  {t.category === 'Star Citizen' && (
-                    <div className="absolute top-0 right-0 p-1">
-                      <div className="w-1 h-1 bg-blue-500 rounded-full animate-pulse" />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </section>
+              <div className="mt-8 p-4 bg-blue-500/5 border border-blue-500/10 rounded-xl">
+                <div className="flex gap-3">
+                  <Info className="w-5 h-5 text-blue-400 shrink-0" />
+                  <p className="text-[11px] text-white/50 leading-relaxed">
+                    <strong className="text-blue-400">Pro Tip:</strong> Enable <span className="text-orange-400 font-bold">Persistent Mode</span> in the General tab to prevent Star Citizen from resetting your controller lights when the game loads.
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
         </div>
-      </main>
+      </div>
+    </main>
 
       <footer className="max-w-6xl mx-auto px-6 py-12 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/5 mt-12">
         <div className="flex items-center gap-2 text-white/20 text-xs font-medium uppercase tracking-widest">
