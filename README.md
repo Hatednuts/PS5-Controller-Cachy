@@ -31,7 +31,7 @@ Before installing, ensure you have the following dependencies on your system:
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/dualsense-gui.git
+git clone https://github.com/Hatednuts/PS5-Controller-Cachy.git
 cd dualsense-gui
 ```
 
