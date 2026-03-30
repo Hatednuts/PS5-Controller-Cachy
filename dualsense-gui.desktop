@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=DualSense GUI
+Comment=Manage DualSense controller settings
+Exec=/bin/bash -c "cd %k/.. && ./scripts/launch.sh"
+Icon=input-gaming
+Terminal=false
+Categories=Settings;HardwareSettings;
+Keywords=controller;ps5;dualsense;gaming;
