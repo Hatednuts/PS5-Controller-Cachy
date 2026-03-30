@@ -32,7 +32,7 @@ Before installing, ensure you have the following dependencies on your system:
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/Hatednuts/PS5-Controller-Cachy.git
-cd dualsense-gui
+cd PS5-Controller-Cachy
 ```
 
 ### 2. Install Dependencies
